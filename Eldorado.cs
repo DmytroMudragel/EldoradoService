@@ -106,7 +106,7 @@ namespace EldoradoBot
                             HtmlAgilityPack.HtmlDocument htmldoc = new HtmlAgilityPack.HtmlDocument();
                             htmldoc.LoadHtml(html);
                             ///////
-
+                            //dfgfgfgdgrteg
 
                             var unreadMessgesCount = Convert.ToInt32(htmldoc.DocumentNode.SelectSingleNode(".//span[@class='ng-star-inserted']").Attributes["Value"].Value);
                             return unreadMessgesCount;
