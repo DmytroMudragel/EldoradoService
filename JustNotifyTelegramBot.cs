@@ -18,6 +18,8 @@ namespace EldoradoBot
 {
     public class JustNotifyTelegramBot : ITelegramBot
     {
+        private readonly object _Lock = new object();
+
         public static string? _TelegramBotToken { get; set; }
 
         public static string? _UserId { get; set; }
@@ -57,28 +59,34 @@ namespace EldoradoBot
 
         public bool SendPhoto(string text, InputOnlineFile inputOnlineFile)
         {
-            if (_UserId is not null)
+            lock (_Lock)
             {
-                var res = _BotClient?.SendPhotoAsync(chatId: _UserId, inputOnlineFile, caption: text, replyMarkup: new ReplyKeyboardRemove()).Result;
-                if (res is not null)
+                if (_UserId is not null)
                 {
-                    return true;
+                    var res = _BotClient?.SendPhotoAsync(chatId: _UserId, inputOnlineFile, caption: text, replyMarkup: new ReplyKeyboardRemove()).Result;
+                    if (res is not null)
+                    {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
 
         public bool SendMessage(string text)
         {
-            if (_UserId is not null)
+            lock (_Lock)
             {
-                var res = _BotClient?.SendTextMessageAsync(chatId: _UserId, text: text,replyMarkup: new ReplyKeyboardRemove()).Result;
-                if (res is not null)
+                if (_UserId is not null)
                 {
-                    return true;
+                    var res = _BotClient?.SendTextMessageAsync(chatId: _UserId, text: text, replyMarkup: new ReplyKeyboardRemove()).Result;
+                    if (res is not null)
+                    {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
     }
 }
