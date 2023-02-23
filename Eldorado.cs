@@ -33,6 +33,17 @@ namespace EldoradoBot
             }
         }
 
+        public class EldoradoMessage
+        {
+            public string? _messageText { get; set; }
+            public string? _buyerName { get; set; }
+            public EldoradoMessage(string messageText, string buyerName)
+            {
+                _messageText = messageText;
+                _buyerName = buyerName;
+            }
+        }
+
         public bool Init(ConfigHandler configHandler)
         {
             try
@@ -91,7 +102,7 @@ namespace EldoradoBot
         //    return Screenshot;
         //}
 
-        public int GetMessages(string url)
+        public HtmlAgilityPack.HtmlDocument? GetHtml(string url)
         {
             try
             {
@@ -105,22 +116,40 @@ namespace EldoradoBot
                         {
                             HtmlAgilityPack.HtmlDocument htmldoc = new HtmlAgilityPack.HtmlDocument();
                             htmldoc.LoadHtml(html);
-                            ///////
-                            //dfgfgfgdgrteg
-
-                            var unreadMessgesCount = Convert.ToInt32(htmldoc.DocumentNode.SelectSingleNode(".//span[@class='ng-star-inserted']").Attributes["Value"].Value);
-                            return unreadMessgesCount;
+                            return htmldoc;
                         }
                     }
                 }
-                return -1;
+                return null;
             }
             catch (Exception ex)
             {
-                Logger.AddLogRecord($"Get unread messages count exeption: {ex}", Logger.Status.EXEPTION);
-                return -1;
+                Logger.AddLogRecord($"Failed to get html: {ex}", Logger.Status.EXEPTION);
+                return null;
             }
         }
+
+        public List<EldoradoMessage>? GetUnreadMessages(string link)
+        {
+            HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
+            if (htmlDoc is not null)
+            {
+                List<EldoradoMessage>? messageList = new List<EldoradoMessage>();
+                HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
+                foreach (var chat in chats)
+                {
+                    string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
+                    string buyerName = chat.GetAttributeValue("title", "");
+                    if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
+                    {
+                        messageList.Add(new EldoradoMessage(messageText, buyerName));
+                    }
+                }
+                return messageList;
+            }
+            return null;
+        }
+
 
         public bool RefreshSession()
         {
@@ -237,7 +266,7 @@ namespace EldoradoBot
                         var httpResponse = _client.PostAsync(NewOffer._Url, httpContent).Result;
                         if (httpResponse.StatusCode == HttpStatusCode.Created && httpResponse.Content != null)
                         {
-                            Logger.AddLogRecord($"New offer {offerInfo._OfferName} => {acc[acc.Count-1]} created", Logger.Status.OK);
+                            Logger.AddLogRecord($"New offer {offerInfo._OfferName} => {acc[acc.Count - 1]} created", Logger.Status.OK);
                             return true;
                         }
                     }
@@ -334,7 +363,7 @@ namespace EldoradoBot
                                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK && httpResponseSecondMessage.Content != null)
                                     {
                                         var secondJsonString = httpResponseSecondMessage.Content.ReadAsStringAsync().Result;
-                                        if (secondJsonString is not null )
+                                        if (secondJsonString is not null)
                                         {
                                             AllAccsInfo.Root? secondAllAccsInfo = System.Text.Json.JsonSerializer.Deserialize<AllAccsInfo.Root>(secondJsonString);
                                             if (secondAllAccsInfo is not null && secondAllAccsInfo.results is not null)
@@ -344,7 +373,7 @@ namespace EldoradoBot
                                                     res.Add(result);
                                                 }
                                             }
-                                            
+
                                         }
                                     }
                                     Thread.Sleep(500);
@@ -359,7 +388,7 @@ namespace EldoradoBot
                     }
                     else
                     {
-                        Logger.AddLogRecord("failed",Logger.Status.BAD);
+                        Logger.AddLogRecord("failed", Logger.Status.BAD);
                     }
                 }
                 Logger.AddLogRecord("Failed getting all accs info", Logger.Status.BAD);
@@ -379,215 +408,215 @@ namespace EldoradoBot
         ///// </summary>
         ///// <param name="image"></param>
         ///// <returns></returns>
-//        public static string ParseBitmap(Bitmap image)
-//        {
-//            var Ocr = new IronTesseract();
-//            using (var Input = new OcrInput(image))
-//            {
-//                Input.Contrast();
-//                Input.Invert();
-//                var Result = Ocr.Read(Input);
-//                return Result.Text;
-//            }
-//        }
+        //        public static string ParseBitmap(Bitmap image)
+        //        {
+        //            var Ocr = new IronTesseract();
+        //            using (var Input = new OcrInput(image))
+        //            {
+        //                Input.Contrast();
+        //                Input.Invert();
+        //                var Result = Ocr.Read(Input);
+        //                return Result.Text;
+        //            }
+        //        }
 
-//        /// <summary>
-//        /// Crop bitmap image to certain size 
-//        /// </summary>
-//        /// <param name="bitmap"></param>
-//        /// <param name="x"></param>
-//        /// <param name="y"></param>
-//        /// <param name="width"></param>
-//        /// <param name="height"></param>
-//        /// <returns></returns>
-//        public static Bitmap GetCroppedBitmap(Bitmap bitmap, int x, int y, int width, int height)
-//        {
-//            Bitmap retBitmap = null;
-//            using (var currentTile = new Bitmap(width, height))
-//            {
-//                using (var currentTileGraphics = Graphics.FromImage(currentTile))
-//                {
-//                    currentTileGraphics.Clear(System.Drawing.Color.Black);
-//                    var absentRectangleArea = new System.Drawing.Rectangle(x, y, width, height);
-//                    currentTileGraphics.DrawImage(bitmap, 0, 0, absentRectangleArea, GraphicsUnit.Pixel);
-//                }
-//                retBitmap = new Bitmap(currentTile);
-//            }
-//            return retBitmap;
-//        }
+        //        /// <summary>
+        //        /// Crop bitmap image to certain size 
+        //        /// </summary>
+        //        /// <param name="bitmap"></param>
+        //        /// <param name="x"></param>
+        //        /// <param name="y"></param>
+        //        /// <param name="width"></param>
+        //        /// <param name="height"></param>
+        //        /// <returns></returns>
+        //        public static Bitmap GetCroppedBitmap(Bitmap bitmap, int x, int y, int width, int height)
+        //        {
+        //            Bitmap retBitmap = null;
+        //            using (var currentTile = new Bitmap(width, height))
+        //            {
+        //                using (var currentTileGraphics = Graphics.FromImage(currentTile))
+        //                {
+        //                    currentTileGraphics.Clear(System.Drawing.Color.Black);
+        //                    var absentRectangleArea = new System.Drawing.Rectangle(x, y, width, height);
+        //                    currentTileGraphics.DrawImage(bitmap, 0, 0, absentRectangleArea, GraphicsUnit.Pixel);
+        //                }
+        //                retBitmap = new Bitmap(currentTile);
+        //            }
+        //            return retBitmap;
+        //        }
 
-//        /// <summary>
-//        /// Returns window rectangle or empty rectangle if there no window
-//        /// </summary>
-//        /// <param name="winToFindName"></param>
-//        /// <returns></returns>
-//        public static Rectangle GetWindowRect(string winToFindName, string windowToFindClass, bool needed)
-//        {
-//            lock (scrLock)
-//            {
-//                if (!IsTheWindowsExist(windowToFindClass))
-//                {
-//                    return Rectangle.Empty;
-//                }
-//                if (needed && (AutoItX.WinGetTitle("[ACTIVE]") != winToFindName))
-//                {
-//                    AutoItX.WinActivate(windowToFindClass);
-//                    AutoItX.WinGetTitle();
-//                }
-//                return AutoItX.WinGetPos(windowToFindClass);
-//            }
-//        }
+        //        /// <summary>
+        //        /// Returns window rectangle or empty rectangle if there no window
+        //        /// </summary>
+        //        /// <param name="winToFindName"></param>
+        //        /// <returns></returns>
+        //        public static Rectangle GetWindowRect(string winToFindName, string windowToFindClass, bool needed)
+        //        {
+        //            lock (scrLock)
+        //            {
+        //                if (!IsTheWindowsExist(windowToFindClass))
+        //                {
+        //                    return Rectangle.Empty;
+        //                }
+        //                if (needed && (AutoItX.WinGetTitle("[ACTIVE]") != winToFindName))
+        //                {
+        //                    AutoItX.WinActivate(windowToFindClass);
+        //                    AutoItX.WinGetTitle();
+        //                }
+        //                return AutoItX.WinGetPos(windowToFindClass);
+        //            }
+        //        }
 
-//        /// <summary>
-//        /// Check is there windows exists 
-//        /// </summary>
-//        /// <returns></returns>
-//        public static bool IsTheWindowsExist(string windowToFindClass)
-//        {
-//            lock (scrLock)
-//            {
-//                return AutoItX.WinExists(windowToFindClass) == 1;
-//            }
-//        }
+        //        /// <summary>
+        //        /// Check is there windows exists 
+        //        /// </summary>
+        //        /// <returns></returns>
+        //        public static bool IsTheWindowsExist(string windowToFindClass)
+        //        {
+        //            lock (scrLock)
+        //            {
+        //                return AutoItX.WinExists(windowToFindClass) == 1;
+        //            }
+        //        }
 
-//        /// <summary>
-//        /// Return certain window screenshot as bitmap or null 
-//        /// </summary>
-//        /// <param name="windowToActivateName"></param>
-//        /// <param name="windowToFindClass"></param>
-//        /// <param name="screenshotLock"></param>
-//        /// <returns></returns>
-//        public static Bitmap GetWinScreenshot(string windowToActivateName, string windowToFindClass)
-//        {
-//            lock (scrLock)
-//            {
-//                Rectangle currWinRect = GetWindowRect(windowToActivateName, windowToFindClass, true);
-//                if (currWinRect == Rectangle.Empty)
-//                {
-//                    return null;
-//                }
-//                Bitmap bitmap = new Bitmap(currWinRect.Width, currWinRect.Height);
-//                using (Graphics graphics = Graphics.FromImage(bitmap))
-//                {
-//                    graphics.CopyFromScreen(new System.Drawing.Point(currWinRect.Left, currWinRect.Top), System.Drawing.Point.Empty, currWinRect.Size);
-//                }
-//                return bitmap;
-//            }
-//        }
+        //        /// <summary>
+        //        /// Return certain window screenshot as bitmap or null 
+        //        /// </summary>
+        //        /// <param name="windowToActivateName"></param>
+        //        /// <param name="windowToFindClass"></param>
+        //        /// <param name="screenshotLock"></param>
+        //        /// <returns></returns>
+        //        public static Bitmap GetWinScreenshot(string windowToActivateName, string windowToFindClass)
+        //        {
+        //            lock (scrLock)
+        //            {
+        //                Rectangle currWinRect = GetWindowRect(windowToActivateName, windowToFindClass, true);
+        //                if (currWinRect == Rectangle.Empty)
+        //                {
+        //                    return null;
+        //                }
+        //                Bitmap bitmap = new Bitmap(currWinRect.Width, currWinRect.Height);
+        //                using (Graphics graphics = Graphics.FromImage(bitmap))
+        //                {
+        //                    graphics.CopyFromScreen(new System.Drawing.Point(currWinRect.Left, currWinRect.Top), System.Drawing.Point.Empty, currWinRect.Size);
+        //                }
+        //                return bitmap;
+        //            }
+        //        }
 
-//        [DllImport("user32.dll", SetLastError = true)]
-//        [return: MarshalAs(UnmanagedType.Bool)]
-//        static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+        //        [DllImport("user32.dll", SetLastError = true)]
+        //        [return: MarshalAs(UnmanagedType.Bool)]
+        //        static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
 
-//        /// <summary>
-//        /// Return certain window screenshot even if it is not active as bitmap or null
-//        /// </summary>
-//        /// <param name="windowToActivateName"></param>
-//        /// <param name="windowToFindClass"></param>
-//        /// <param name="screenshotLock"></param>
-//        /// <returns></returns>
-//        /// 
-//        public static Bitmap GetWinScreenshotNotActive(string windowToActivateName, string windowToFindClass)
-//        {
-//            lock (scrLock)
-//            {
-//                Rectangle currWinRect = GetWindowRect(windowToActivateName, windowToFindClass, false);
-//                if (currWinRect == Rectangle.Empty)
-//                {
-//                    return null;
-//                }
-//                Bitmap B = new Bitmap(currWinRect.Width, currWinRect.Height);
-//                using (Graphics graphics = Graphics.FromImage(B))
-//                {
-//                    Bitmap bmp = new Bitmap(currWinRect.Size.Width, currWinRect.Size.Height, graphics);
-//                    Graphics memoryGraphics = Graphics.FromImage(bmp);
-//                    IntPtr dc = memoryGraphics.GetHdc();
-//                    var handle = AutoItX.WinGetHandle(windowToFindClass);
-//                    bool success = PrintWindow(handle, dc, 0);
-//                    memoryGraphics.ReleaseHdc(dc);
-//                    return bmp;
-//                }
-//            }
-//        }
+        //        /// <summary>
+        //        /// Return certain window screenshot even if it is not active as bitmap or null
+        //        /// </summary>
+        //        /// <param name="windowToActivateName"></param>
+        //        /// <param name="windowToFindClass"></param>
+        //        /// <param name="screenshotLock"></param>
+        //        /// <returns></returns>
+        //        /// 
+        //        public static Bitmap GetWinScreenshotNotActive(string windowToActivateName, string windowToFindClass)
+        //        {
+        //            lock (scrLock)
+        //            {
+        //                Rectangle currWinRect = GetWindowRect(windowToActivateName, windowToFindClass, false);
+        //                if (currWinRect == Rectangle.Empty)
+        //                {
+        //                    return null;
+        //                }
+        //                Bitmap B = new Bitmap(currWinRect.Width, currWinRect.Height);
+        //                using (Graphics graphics = Graphics.FromImage(B))
+        //                {
+        //                    Bitmap bmp = new Bitmap(currWinRect.Size.Width, currWinRect.Size.Height, graphics);
+        //                    Graphics memoryGraphics = Graphics.FromImage(bmp);
+        //                    IntPtr dc = memoryGraphics.GetHdc();
+        //                    var handle = AutoItX.WinGetHandle(windowToFindClass);
+        //                    bool success = PrintWindow(handle, dc, 0);
+        //                    memoryGraphics.ReleaseHdc(dc);
+        //                    return bmp;
+        //                }
+        //            }
+        //        }
 
-//        /// <summary>
-//        /// Gets whole screen screenshot
-//        /// </summary>
-//        /// <returns></returns>
-//        public static Bitmap GetScreenShot()
-//        {
-//            Rectangle bounds = new Rectangle(0, 0, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
-//            Bitmap Screenshot = new Bitmap(bounds.Width, bounds.Height);
-//            using (Graphics graphics = Graphics.FromImage(Screenshot))
-//            {
-//                graphics.CopyFromScreen(new System.Drawing.Point(bounds.Left, bounds.Top), System.Drawing.Point.Empty, bounds.Size);
-//            }
-//            return Screenshot;
-//        }
+        //        /// <summary>
+        //        /// Gets whole screen screenshot
+        //        /// </summary>
+        //        /// <returns></returns>
+        //        public static Bitmap GetScreenShot()
+        //        {
+        //            Rectangle bounds = new Rectangle(0, 0, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
+        //            Bitmap Screenshot = new Bitmap(bounds.Width, bounds.Height);
+        //            using (Graphics graphics = Graphics.FromImage(Screenshot))
+        //            {
+        //                graphics.CopyFromScreen(new System.Drawing.Point(bounds.Left, bounds.Top), System.Drawing.Point.Empty, bounds.Size);
+        //            }
+        //            return Screenshot;
+        //        }
 
-//        /// <summary>Finds a matching image on the screen.</summary>
-//        ///     ''' <param name="bmpMatch">The image to find on the screen.</param>
-//        ///     ''' <param name="ExactMatch">True finds an exact match (slowerer on large images). False finds a close match (faster on large images).</param>
-//        ///     ''' <param name="bmpWhereFind">Picture where to find subimage.</param>
-//        ///     ''' <returns>Returns a Rectangle of the found image in sceen coordinates.</returns>
-//        public static Rectangle FindImageOnScreen(Bitmap bmpMatch, Bitmap bmpWhereFind, bool ExactMatch)
-//        {
-//            BitmapData ImgBmd = bmpMatch.LockBits(new Rectangle(0, 0, bmpMatch.Width, bmpMatch.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-//            BitmapData ScreenBmd = bmpWhereFind.LockBits(new Rectangle(0, 0, bmpWhereFind.Width, bmpWhereFind.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+        //        /// <summary>Finds a matching image on the screen.</summary>
+        //        ///     ''' <param name="bmpMatch">The image to find on the screen.</param>
+        //        ///     ''' <param name="ExactMatch">True finds an exact match (slowerer on large images). False finds a close match (faster on large images).</param>
+        //        ///     ''' <param name="bmpWhereFind">Picture where to find subimage.</param>
+        //        ///     ''' <returns>Returns a Rectangle of the found image in sceen coordinates.</returns>
+        //        public static Rectangle FindImageOnScreen(Bitmap bmpMatch, Bitmap bmpWhereFind, bool ExactMatch)
+        //        {
+        //            BitmapData ImgBmd = bmpMatch.LockBits(new Rectangle(0, 0, bmpMatch.Width, bmpMatch.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+        //            BitmapData ScreenBmd = bmpWhereFind.LockBits(new Rectangle(0, 0, bmpWhereFind.Width, bmpWhereFind.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
-//            byte[] ImgByts = new byte[(Math.Abs(ImgBmd.Stride) * bmpMatch.Height) - 1 + 1];
-//            byte[] ScreenByts = new byte[(Math.Abs(ScreenBmd.Stride) * bmpWhereFind.Height) - 1 + 1];
+        //            byte[] ImgByts = new byte[(Math.Abs(ImgBmd.Stride) * bmpMatch.Height) - 1 + 1];
+        //            byte[] ScreenByts = new byte[(Math.Abs(ScreenBmd.Stride) * bmpWhereFind.Height) - 1 + 1];
 
-//            Marshal.Copy(ImgBmd.Scan0, ImgByts, 0, ImgByts.Length);
-//            Marshal.Copy(ScreenBmd.Scan0, ScreenByts, 0, ScreenByts.Length);
+        //            Marshal.Copy(ImgBmd.Scan0, ImgByts, 0, ImgByts.Length);
+        //            Marshal.Copy(ScreenBmd.Scan0, ScreenByts, 0, ScreenByts.Length);
 
-//            bool FoundMatch = false;
-//            Rectangle rct = Rectangle.Empty;
-//            int sindx, iindx;
-//            int spc, ipc;
-//            int skpx = Convert.ToInt32((bmpMatch.Width - 1) / (double)10);
-//            if (skpx < 1 | ExactMatch)
-//                skpx = 1;
-//            int skpy = Convert.ToInt32((bmpMatch.Height - 1) / (double)10);
-//            if (skpy < 1 | ExactMatch)
-//                skpy = 1;
-//            for (int si = 0; si <= ScreenByts.Length - 1; si += 3)
-//            {
-//                FoundMatch = true;
-//                for (int iy = 0; iy <= ImgBmd.Height - 1; iy += skpy)
-//                {
-//                    for (int ix = 0; ix <= ImgBmd.Width - 1; ix += skpx)
-//                    {
-//                        sindx = (iy * ScreenBmd.Stride) + (ix * 3) + si;
-//                        iindx = (iy * ImgBmd.Stride) + (ix * 3);
-//                        spc = Color.FromArgb(ScreenByts[sindx + 2], ScreenByts[sindx + 1], ScreenByts[sindx]).ToArgb();
-//                        ipc = Color.FromArgb(ImgByts[iindx + 2], ImgByts[iindx + 1], ImgByts[iindx]).ToArgb();
-//                        if (spc != ipc)
-//                        {
-//                            FoundMatch = false;
-//                            iy = ImgBmd.Height - 1;
-//                            ix = ImgBmd.Width - 1;
-//                        }
-//                    }
-//                }
-//                if (FoundMatch)
-//                {
-//                    double r = si / (double)(bmpWhereFind.Width * 3);
-//                    double c = bmpWhereFind.Width * (r % 1);
-//                    if (r % 1 >= 0.5)
-//                        r -= 1;
-//                    rct.X = Convert.ToInt32(c);
-//                    rct.Y = Convert.ToInt32(r);
-//                    rct.Width = bmpMatch.Width;
-//                    rct.Height = bmpMatch.Height;
-//                    break;
-//                }
-//            }
-//            bmpMatch.UnlockBits(ImgBmd);
-//            bmpWhereFind.UnlockBits(ScreenBmd);
-//            return rct;
-//        }
+        //            bool FoundMatch = false;
+        //            Rectangle rct = Rectangle.Empty;
+        //            int sindx, iindx;
+        //            int spc, ipc;
+        //            int skpx = Convert.ToInt32((bmpMatch.Width - 1) / (double)10);
+        //            if (skpx < 1 | ExactMatch)
+        //                skpx = 1;
+        //            int skpy = Convert.ToInt32((bmpMatch.Height - 1) / (double)10);
+        //            if (skpy < 1 | ExactMatch)
+        //                skpy = 1;
+        //            for (int si = 0; si <= ScreenByts.Length - 1; si += 3)
+        //            {
+        //                FoundMatch = true;
+        //                for (int iy = 0; iy <= ImgBmd.Height - 1; iy += skpy)
+        //                {
+        //                    for (int ix = 0; ix <= ImgBmd.Width - 1; ix += skpx)
+        //                    {
+        //                        sindx = (iy * ScreenBmd.Stride) + (ix * 3) + si;
+        //                        iindx = (iy * ImgBmd.Stride) + (ix * 3);
+        //                        spc = Color.FromArgb(ScreenByts[sindx + 2], ScreenByts[sindx + 1], ScreenByts[sindx]).ToArgb();
+        //                        ipc = Color.FromArgb(ImgByts[iindx + 2], ImgByts[iindx + 1], ImgByts[iindx]).ToArgb();
+        //                        if (spc != ipc)
+        //                        {
+        //                            FoundMatch = false;
+        //                            iy = ImgBmd.Height - 1;
+        //                            ix = ImgBmd.Width - 1;
+        //                        }
+        //                    }
+        //                }
+        //                if (FoundMatch)
+        //                {
+        //                    double r = si / (double)(bmpWhereFind.Width * 3);
+        //                    double c = bmpWhereFind.Width * (r % 1);
+        //                    if (r % 1 >= 0.5)
+        //                        r -= 1;
+        //                    rct.X = Convert.ToInt32(c);
+        //                    rct.Y = Convert.ToInt32(r);
+        //                    rct.Width = bmpMatch.Width;
+        //                    rct.Height = bmpMatch.Height;
+        //                    break;
+        //                }
+        //            }
+        //            bmpMatch.UnlockBits(ImgBmd);
+        //            bmpWhereFind.UnlockBits(ScreenBmd);
+        //            return rct;
+        //        }
 
-//        #endregion
+        //        #endregion
     }
 }

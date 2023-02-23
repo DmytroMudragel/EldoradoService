@@ -12,11 +12,11 @@ try
 
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
     {
-        //ITelegramBot telegramBot = new JustNotifyTelegramBot();
-        //if (telegramBot.Init(configInfo.TelegramBotToken, configInfo.UsedId))
-        //{
-        //    Logger.Init(telegramBot);
-        //}
+        ITelegramBot telegramBot = new JustNotifyTelegramBot();
+        if (telegramBot.Init(configInfo.TelegramBotToken, configInfo.UsedId))
+        {
+            Logger.Init(telegramBot);
+        }
 
         List<Utils.GameAccOffer> Offers = new List<Utils.GameAccOffer>() { };
         for (int i = 0; i < configInfo?.OffersInfo?.OffersNames.Count(); i++)
@@ -25,13 +25,13 @@ try
         }
         Eldorado eldorado = new Eldorado();
 
-       
-
-        if (configInfo is not null && eldorado.Init(configInfo))
+        if (configInfo?.ChatLink is not null && eldorado.Init(configInfo))
         {
+            string link = configInfo.ChatLink;
 
-            string link = "https://app.talkjs.com/app/49mLECOW/user/9487b0d271ea5d966188_n/inbox/cb436bef335ba4d7033b/chats?thirdparties=&clientHeight=739&id=auth0%7C603dedb500cf950070a1d02f&sessionId=1f355072-f7d0-4c46-ace4-76a45b3d3dc1&signature=a2e405c03d1c3bd0a6627b8b8e745b32d369f2e0509aec8864a8ef7e3186a1de&localSettings=eyJkZXNrdG9wTm90aWZ5Ijp0cnVlLCJodG1sUGFuZWxPcHRpb25zIjp7InBlckNvbnYiOnt9fSwiZmVlZEZpbHRlciI6e30sIm1lc3NhZ2VGaWx0ZXIiOnt9LCJ1c2VCcm93c2VySGlzdG9yeSI6dHJ1ZSwidHJhbnNsYXRpb25PcHRpb25zIjp7Imdsb2JhbCI6ZmFsc2UsInBlckNvbnYiOnt9LCJzaG93VG9nZ2xlIjpmYWxzZX0sImhpZ2hsaWdodCI6W10sImNoYXRIZWFkZXJTdGF0ZSI6InByb2ZpbGUiLCJ0aGVtZSI6ImRlZmF1bHRfZGFyayIsIm1lc3NhZ2VGaWVsZCI6eyJlbnRlclNlbmRzTWVzc2FnZSI6dHJ1ZSwic3BlbGxjaGVjayI6ZmFsc2UsInZpc2libGUiOnRydWUsImF1dG9mb2N1cyI6dHJ1ZX0sInZpZXciOnsibW9kZSI6ImZ1bGwiLCJoaWRlSHViIjpmYWxzZSwiaXNJbnNpZGVNb2JpbGVBcHAiOmZhbHNlLCJjYXB0dXJlS2V5Ym9hcmRFdmVudHMiOmZhbHNlLCJzaG93Q2hhdEhlYWRlciI6dHJ1ZSwic2hvd0ZlZWRIZWFkZXIiOnRydWUsInNlYXJjaEluQ29udiI6dHJ1ZSwiY2hhdFRpdGxlTW9kZSI6InBhcnRpY2lwYW50cyIsImNoYXRTdWJ0aXRsZU1vZGUiOiJzdWJqZWN0IiwiZmVlZENvbnZlcnNhdGlvblRpdGxlTW9kZSI6ImF1dG8iLCJzaG93Q2xvc2VJbkhlYWRlciI6ImF1dG8iLCJsZWdhY3lOb0NoYXRzUGFnZSI6ZmFsc2UsInRpbWVab25lIjoiRXVyb3BlL0t5aXYiLCJzaG93TW9iaWxlQmFja0J1dHRvbiI6dHJ1ZX19";
-            eldorado.GetMessages(link);
+
+            Thread thread = new Thread(() =>
+            eldorado.GetUnreadMessages(link);
 
 
 
