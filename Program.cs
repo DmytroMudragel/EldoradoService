@@ -16,7 +16,6 @@ try
         {
             Logger.Init(telegramBot);
         }
-
         List<Utils.GameAccOffer> Offers = new List<Utils.GameAccOffer>() { };
         for (int i = 0; i < configInfo?.OffersInfo?.OffersNames.Count(); i++)
         {
@@ -32,8 +31,7 @@ try
             Thread eldoradoDataRenewingthread = new Thread(() => { eldorado.MessageChecking(link, refreshTokenIsGood); });
             eldoradoDataRenewingthread.Start();
 
-
-
+            int lastDisputsCount = 0;
             List<Eldorado.AccOnEldorado> refreshedAccs = new List<Eldorado.AccOnEldorado>();
             while (refreshTokenIsGood)
             {
@@ -59,55 +57,6 @@ try
                     }
                 }
                 Logger.AddLogRecord($"Read accs for {AllAccsBase.Count} offer types", Logger.Status.OK);
-
-                ///////
-                //var baseAddress = new Uri("https://www.eldorado.gg");
-                //var cookieContainer = new CookieContainer();
-                //using (var handler = new HttpClientHandler() { CookieContainer = cookieContainer })
-                //using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
-                //{
-                //    var content = new FormUrlEncodedContent(new[]
-                //    {
-                //        new KeyValuePair<string, string>("foo", "bar"),
-                //        new KeyValuePair<string, string>("baz", "bazinga"),
-                //    });
-                //    cookieContainer.Add(baseAddress, new Cookie("CookieName", "cookie_value"));
-                //    var result = await client.PostAsync("/test", content);
-                //    result.EnsureSuccessStatusCode();
-                //}
-                //var baseAddress = new Uri("https://www.eldorado.gg");
-                //using (var handler = new HttpClientHandler { UseCookies = false })
-                //using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
-                //{
-                //    var message = new HttpRequestMessage(HttpMethod.Get, "/test");
-                //    message.Headers.Add("Cookie", "cookie1=value1; cookie2=value2");
-                //    var result = await client.SendAsync(message);
-                //    result.EnsureSuccessStatusCode();
-                //}
-                //string URL = "https://www.eldorado.gg"; 
-                //using (HttpClientHandler handler = new HttpClientHandler { AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.All })
-                //{
-                //    using (var clnt = new HttpClient(handler))
-                //    {
-                //        clnt.
-                //        using (HttpResponseMessage resp = clnt.GetAsync(URL).Result)
-                //        {
-                //            if (resp.IsSuccessStatusCode)
-                //            {
-                //                var html = resp.Content.ReadAsStringAsync().Result;
-                //                if (!string.IsNullOrEmpty(html))
-                //                {
-                //                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                //                    doc.LoadHtml(html);
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                ////////
-
-
-                
 
                 var accsInfo = eldorado.GetAllOffersInfo();
                 if (accsInfo is not null)
@@ -139,6 +88,17 @@ try
                     }
                     Logger.AddLogRecord($"Eldorado => Total: {allAccsFromEldorado.Count} Active: {activeAccs.Count} Paused: {pausedAccs.Count} Closed: {closedAccs.Count} ", Logger.Status.OK);
 
+                    //Check for disputes
+                    int res = eldorado.GetActivities();
+                    if (res == 0)
+                    {
+                        lastDisputsCount = 0;
+                    }
+                    if (res > 0 && res > lastDisputsCount)
+                    {
+                        Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
+                        lastDisputsCount = lastDisputsCount + res;
+                    }
 
                     //Changing the data in txt file
                     foreach (var accGroup in AllAccsBase)
@@ -191,7 +151,6 @@ try
                     }
                     Logger.AddLogRecord($"{deletedCount} closed accs was deleted", Logger.Status.OK);
 
-
                     // list new offers til reach max num of accs if there is not enought
                     int gameAccGroupNumber1 = 0;
                     foreach (var gameAccsGroup in AllAccsBase)
@@ -237,8 +196,7 @@ try
                         gameAccGroupNumber1++;
                     }
 
-
-                    //write to a file
+                    //write data to a file
                     int gameAccGroupNumber2 = 0;
                     foreach (var gameAccsGroup in AllAccsBase)
                     {
@@ -247,8 +205,7 @@ try
                     }
                     Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
 
-
-                    
+                    //refreshing 1 of the acc type
                     accsInfo = eldorado.GetAllOffersInfo();
                     if (accsInfo != null)
                     {
@@ -301,11 +258,6 @@ try
                         Logger.AddLogRecord("-------------------", Logger.Status.OK);
 
                     }
-                    //////////
-
-                    //Logger.AddLogRecord($"Waiting {configInfo.OfferTime} minute...", Logger.Status.OK);
-                    //Thread.Sleep(Convert.ToInt32(configInfo.OfferTime) * 60 * 1000);
-                    //Logger.AddLogRecord("-------------------", Logger.Status.OK);
                 }
                 else
                 {

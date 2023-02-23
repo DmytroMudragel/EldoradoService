@@ -64,6 +64,27 @@
 //            return false;
 //        }
 
+//public void GetScreenshot()
+//{
+//    Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
+//                            Screen.PrimaryScreen.Bounds.Height);
+//    Graphics graphics = Graphics.FromImage(bitmap as Image);
+//    graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
+//    bitmap.Save(@"C:\Temp\printscreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
+//}
+
+//public Bitmap GetScreenShot()
+//{
+//    Rectangle screen = Screen.FromControl(this).Bounds;
+//    Rectangle bounds = new Rectangle(0, 0, System.Windows.SystemParameters.PrimaryScreenWidth , (int)SystemParameters.VirtualScreenHeight);
+//    Bitmap Screenshot = new Bitmap(bounds.Width, bounds.Height);
+//    using (Graphics graphics = Graphics.FromImage(Screenshot))
+//    {
+//        graphics.CopyFromScreen(new Point(bounds.Left, bounds.Top), Point.Empty, bounds.Size);
+//    }
+//    return Screenshot;
+//}
+
 //        public bool SendPhoto(string text, InputOnlineFile inputOnlineFile)
 //        {
 //            if (_UserId is not null)

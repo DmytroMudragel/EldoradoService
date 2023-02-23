@@ -18,7 +18,6 @@ namespace EldoradoBot
 
         private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0";
 
-
         public class AccOnEldorado
         {
             public string _itemId = "";
@@ -30,17 +29,6 @@ namespace EldoradoBot
                 _itemId = itemId;
                 _tradeEnvironmentValues = tradeEnvironmentValues;
                 _offerAttributeIdValues = offerAttributeIdValues;
-            }
-        }
-
-        public class EldoradoMessage
-        {
-            public string? _messageText { get; set; }
-            public string? _buyerName { get; set; }
-            public EldoradoMessage(string messageText, string buyerName)
-            {
-                _messageText = messageText;
-                _buyerName = buyerName;
             }
         }
 
@@ -70,7 +58,6 @@ namespace EldoradoBot
                         }
                     }
                 }
-                //RefreshSession();
                 Logger.AddLogRecord("Init ready", Logger.Status.OK);
                 return true;
             }
@@ -80,27 +67,6 @@ namespace EldoradoBot
                 return false;
             }
         }
-
-        //public void GetScreenshot()
-        //{
-        //    Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
-        //                            Screen.PrimaryScreen.Bounds.Height);
-        //    Graphics graphics = Graphics.FromImage(bitmap as Image);
-        //    graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
-        //    bitmap.Save(@"C:\Temp\printscreen" + Guid.NewGuid() + ".jpg", ImageFormat.Jpeg);
-        //}
-
-        //public Bitmap GetScreenShot()
-        //{
-        //    Rectangle screen = Screen.FromControl(this).Bounds;
-        //    Rectangle bounds = new Rectangle(0, 0, System.Windows.SystemParameters.PrimaryScreenWidth , (int)SystemParameters.VirtualScreenHeight);
-        //    Bitmap Screenshot = new Bitmap(bounds.Width, bounds.Height);
-        //    using (Graphics graphics = Graphics.FromImage(Screenshot))
-        //    {
-        //        graphics.CopyFromScreen(new Point(bounds.Left, bounds.Top), Point.Empty, bounds.Size);
-        //    }
-        //    return Screenshot;
-        //}
 
         private HtmlAgilityPack.HtmlDocument? GetHtml(string url)
         {
@@ -129,78 +95,35 @@ namespace EldoradoBot
             }
         }
 
-        private List<EldoradoMessage>? GetUnreadMessages(string link)
-        {
-            try
-            {
-                HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
-            if (htmlDoc is not null)
-            {
-                List<EldoradoMessage>? messageList = new List<EldoradoMessage>();
-                HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
-                foreach (var chat in chats)
-                {
-                    string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
-                    string buyerName = chat.GetAttributeValue("title", "");
-                    if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
-                    {
-                        messageList.Add(new EldoradoMessage(messageText, buyerName));
-                    }
-                }
-                return messageList;
-            }
-            }
-            catch (Exception ex)
-            {
-                Logger.AddLogRecord($"Failed to get unread messages: {ex}", Logger.Status.EXEPTION);
-                return null;
-            }
-            return null;
-        }
-
         public void MessageChecking(string link, bool refreshTokenIsValid)
         {
             try
             {
                 if ((link is not null) && (refreshTokenIsValid is true))
                 {
-                    int lastDisputsCount = 0;
-                    List<EldoradoMessage>? messageHistory = new List<EldoradoMessage>();
+                    Dictionary<string, string>? messageHistory = new Dictionary<string, string>();
                     while (refreshTokenIsValid)
                     {
-                        //Check for disputes
-                        int res = GetActivities();
-                        if (res == 0)
-                        {
-                            lastDisputsCount = 0;
-                        }
-                        if (res > 0 && res > lastDisputsCount)
-                        {
-                            Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
-                            lastDisputsCount = lastDisputsCount + res;
-                        }
-
                         //Check for messages
-                        List<EldoradoMessage>? freshMessages = GetUnreadMessages(link);
-                        if (freshMessages is not null)
+                        HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
+                        if (htmlDoc is not null)
                         {
-                            foreach (EldoradoMessage message in freshMessages)
+                            HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
+                            foreach (var chat in chats)
                             {
-                                if (!messageHistory.Contains(message))
+                                string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
+                                string buyerName = chat.GetAttributeValue("title", "");
+                                if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
                                 {
-                                    Logger.AddLogRecord($"⚠️ New message from [{message._buyerName}]\n{message._messageText}", Logger.Status.OK, true, false);
-                                    messageHistory.Add(message);
+                                    if (messageHistory.ContainsKey(buyerName) == false || messageHistory[buyerName] != messageText)
+                                    {
+                                        Logger.AddLogRecord($" ⚠️New message from {buyerName}\n{messageText}", Logger.Status.OK, true, false);
+                                        messageHistory[buyerName] = messageText;
+                                    }
                                 }
-                            }                      
+                            }
                         }
-
-                        //Prevent message overflow
-                        if (freshMessages is null && messageHistory.Count > 20)
-                        {
-                            messageHistory.Clear();
-                        }
-
-                        Thread.Sleep(5 * 60000);
+                        Thread.Sleep(7 * 60000);
                     }
                 }
                 else
