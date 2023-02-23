@@ -102,7 +102,7 @@ namespace EldoradoBot
         //    return Screenshot;
         //}
 
-        public HtmlAgilityPack.HtmlDocument? GetHtml(string url)
+        private HtmlAgilityPack.HtmlDocument? GetHtml(string url)
         {
             try
             {
@@ -129,9 +129,11 @@ namespace EldoradoBot
             }
         }
 
-        public List<EldoradoMessage>? GetUnreadMessages(string link)
+        private List<EldoradoMessage>? GetUnreadMessages(string link)
         {
-            HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
+            try
+            {
+                HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
             if (htmlDoc is not null)
             {
                 List<EldoradoMessage>? messageList = new List<EldoradoMessage>();
@@ -147,8 +149,71 @@ namespace EldoradoBot
                 }
                 return messageList;
             }
+            }
+            catch (Exception ex)
+            {
+                Logger.AddLogRecord($"Failed to get unread messages: {ex}", Logger.Status.EXEPTION);
+                return null;
+            }
             return null;
         }
+
+        public void MessageChecking(string link, bool refreshTokenIsValid)
+        {
+            try
+            {
+                if ((link is not null) && (refreshTokenIsValid is true))
+                {
+                    int lastDisputsCount = 0;
+                    List<EldoradoMessage>? messageHistory = new List<EldoradoMessage>();
+                    while (refreshTokenIsValid)
+                    {
+                        //Check for disputes
+                        int res = GetActivities();
+                        if (res == 0)
+                        {
+                            lastDisputsCount = 0;
+                        }
+                        if (res > 0 && res > lastDisputsCount)
+                        {
+                            Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
+                            lastDisputsCount = lastDisputsCount + res;
+                        }
+
+                        //Check for messages
+                        List<EldoradoMessage>? freshMessages = GetUnreadMessages(link);
+                        if (freshMessages is not null)
+                        {
+                            foreach (EldoradoMessage message in freshMessages)
+                            {
+                                if (!messageHistory.Contains(message))
+                                {
+                                    Logger.AddLogRecord($"⚠️ New message from [{message._buyerName}]\n{message._messageText}", Logger.Status.OK, true);
+                                    messageHistory.Add(message);
+                                }
+                            }                      
+                        }
+
+                        //Prevent message overflow
+                        if (freshMessages is null && messageHistory.Count > 20)
+                        {
+                            messageHistory.Clear();
+                        }
+
+                        Thread.Sleep(5 * 60000);
+                    }
+                }
+                else
+                {
+                    Logger.AddLogRecord($"Wrong token or link cannot check for unread messages", Logger.Status.BAD);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.AddLogRecord($"Error while checking unread messages: {ex}", Logger.Status.EXEPTION);
+            }
+        }
+
 
 
         public bool RefreshSession()

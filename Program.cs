@@ -8,7 +8,6 @@ try
 {
     bool refreshTokenIsGood = true;
     ConfigHandler? configInfo = new ConfigHandler()?.Read();
-    int lastDisputsCount = 0;
 
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
     {
@@ -29,9 +28,9 @@ try
         {
             string link = configInfo.ChatLink;
 
-
-            Thread thread = new Thread(() =>
-            eldorado.GetUnreadMessages(link);
+            //Start checking for messages and disputes 
+            Thread eldoradoDataRenewingthread = new Thread(() => { eldorado.MessageChecking(link, refreshTokenIsGood); });
+            eldoradoDataRenewingthread.Start();
 
 
 
@@ -108,17 +107,7 @@ try
                 ////////
 
 
-                //Check for disputes
-                int res = eldorado.GetActivities();
-                if (res == 0)
-                {
-                    lastDisputsCount = 0;
-                }
-                if (res > 0 && res > lastDisputsCount)
-                {
-                    Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
-                    lastDisputsCount = lastDisputsCount + res;
-                }
+                
 
                 var accsInfo = eldorado.GetAllOffersInfo();
                 if (accsInfo is not null)
@@ -195,9 +184,9 @@ try
                                     }
                                     Logger.AddLogRecord($" ✅Sold {Offers[gameAccGroupNumber]._OfferName} ({closedAcc[1]}) for {closedAcc[3]}{closedAcc[4]}", Logger.Status.OK, true);
                                 }
-                            }
-                            Thread.Sleep(1000);
-                            gameAccGroupNumber++;
+                                Thread.Sleep(1000);
+                                gameAccGroupNumber++;
+                            } 
                         }
                     }
                     Logger.AddLogRecord($"{deletedCount} closed accs was deleted", Logger.Status.OK);
