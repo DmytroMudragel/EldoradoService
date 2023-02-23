@@ -248,7 +248,7 @@ try
                     Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
 
 
-                    //////////
+                    
                     accsInfo = eldorado.GetAllOffersInfo();
                     if (accsInfo != null)
                     {
