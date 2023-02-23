@@ -33,12 +33,12 @@ namespace EldoradoBot
             }
         }
 
-        public static void AddLogRecord(string text, Status status, bool telegram = false)
+        public static void AddLogRecord(string text, Status status, bool telegram = false, bool disableNotification = true)
         {
-            AddLogRecord(text, status,null, telegram);
+            AddLogRecord(text, status,null, telegram, disableNotification);
         }
 
-        public static void AddLogRecord(string text, Status status, Exception? exception, bool telegram = false)
+        public static void AddLogRecord(string text, Status status, Exception? exception, bool telegram = false, bool disableNotification = true)
         {
             string currentTimeString = $"[{DateTime.Now:HH:mm:ss}]";
             switch (status)
@@ -82,7 +82,7 @@ namespace EldoradoBot
 
             if (_TelegramBot is not null && telegram)
             {
-                if (_TelegramBot._IsTelegramBotActive is true && _TelegramBot.SendMessage($"[{DateTime.Now:HH:mm:ss}] {text}"))
+                if (_TelegramBot._IsTelegramBotActive is true && _TelegramBot.SendMessage($"[{DateTime.Now:HH:mm:ss}] {text}",disableNotification))
                     Console.WriteLine($"{currentTimeString} Telegram message was successfully sended.");
                 else
                     Console.WriteLine($"{currentTimeString} Error while sending telegram message.");

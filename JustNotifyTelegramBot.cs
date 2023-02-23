@@ -57,13 +57,13 @@ namespace EldoradoBot
             return false;
         }
 
-        public bool SendPhoto(string text, InputOnlineFile inputOnlineFile)
+        public bool SendPhoto(string text, InputOnlineFile inputOnlineFile, bool disableNotification)
         {
             lock (_Lock)
             {
                 if (_UserId is not null)
                 {
-                    var res = _BotClient?.SendPhotoAsync(chatId: _UserId, inputOnlineFile, caption: text, replyMarkup: new ReplyKeyboardRemove()).Result;
+                    var res = _BotClient?.SendPhotoAsync(chatId: _UserId, inputOnlineFile, caption: text, replyMarkup: new ReplyKeyboardRemove(), disableNotification: disableNotification).Result;
                     if (res is not null)
                     {
                         return true;
@@ -73,13 +73,13 @@ namespace EldoradoBot
             }
         }
 
-        public bool SendMessage(string text)
+        public bool SendMessage(string text,bool disableNotification)
         {
             lock (_Lock)
             {
                 if (_UserId is not null)
                 {
-                    var res = _BotClient?.SendTextMessageAsync(chatId: _UserId, text: text, replyMarkup: new ReplyKeyboardRemove()).Result;
+                    var res = _BotClient?.SendTextMessageAsync(chatId: _UserId, text: text, replyMarkup: new ReplyKeyboardRemove(),disableNotification: disableNotification).Result;
                     if (res is not null)
                     {
                         return true;

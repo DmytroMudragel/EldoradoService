@@ -188,7 +188,7 @@ namespace EldoradoBot
                             {
                                 if (!messageHistory.Contains(message))
                                 {
-                                    Logger.AddLogRecord($"⚠️ New message from [{message._buyerName}]\n{message._messageText}", Logger.Status.OK, true);
+                                    Logger.AddLogRecord($"⚠️ New message from [{message._buyerName}]\n{message._messageText}", Logger.Status.OK, true, false);
                                     messageHistory.Add(message);
                                 }
                             }                      

@@ -11,7 +11,7 @@ namespace EldoradoBot
     {
         public bool? _IsTelegramBotActive { get; set; }
         bool Init(string telegramBotToken, string userId);
-        bool SendPhoto(string text, InputOnlineFile inputOnlineFile);
-        bool SendMessage(string text);
+        bool SendPhoto(string text, InputOnlineFile inputOnlineFile, bool disableNotification);
+        bool SendMessage(string text, bool disableNotification);
     }
 }
