@@ -3,12 +3,10 @@ using System.Net;
 using System.Text.RegularExpressions;
 
 Console.Title = "Eldorado Shop Bot";
-
 try
 {
     bool refreshTokenIsGood = true;
     ConfigHandler? configInfo = new ConfigHandler()?.Read();
-
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
     {
         ITelegramBot telegramBot = new JustNotifyTelegramBot();
@@ -19,46 +17,31 @@ try
         List<Utils.GameAccOffer> Offers = new List<Utils.GameAccOffer>() { };
         for (int i = 0; i < configInfo?.OffersInfo?.OffersNames.Count(); i++)
         {
-            Offers.Add(new Utils.GameAccOffer(configInfo?.OffersInfo?.OffersNames[i], configInfo?.OffersInfo?.FileToGetAccsFromNames[i], configInfo?.OffersInfo?.OffersSamplesJsonFileNames[i], configInfo?.OffersInfo?.AccInfoPositions[i], configInfo?.OffersInfo?.DelimitersForGetAccsFiles[i], configInfo?.OffersInfo?.MaxAccsToListOnEldorado[i]));
+            Offers.Add(new Utils.GameAccOffer(configInfo?.OffersInfo?.OffersNames[i],new Utils.OfferSignature(configInfo?.OffersInfo?.Signature.ItemIds[i], configInfo?.OffersInfo?.Signature.TradeEnviromentValues[i]),
+                configInfo?.OffersInfo?.FileToGetAccsFromNames[i], configInfo?.OffersInfo?.OffersSamplesJsonFileNames[i],
+                configInfo?.OffersInfo?.AccInfoPositions[i], configInfo?.OffersInfo?.DelimitersForGetAccsFiles[i],configInfo?.OffersInfo?.MaxAccsToListOnEldorado[i]));
         }
         Eldorado eldorado = new Eldorado();
 
         if (configInfo?.ChatLink is not null && eldorado.Init(configInfo))
         {
-            string link = configInfo.ChatLink;
-
             //Start checking for messages and disputes 
-            Thread eldoradoDataRenewingthread = new Thread(() => { eldorado.MessageChecking(link, refreshTokenIsGood); });
-            eldoradoDataRenewingthread.Start();
+            eldorado.StartMessageAndDisputsChecking(configInfo.ChatLink, refreshTokenIsGood);
+
+
+
+
+
+
 
             int lastDisputsCount = 0;
             List<Eldorado.AccOnEldorado> refreshedAccs = new List<Eldorado.AccOnEldorado>();
             while (refreshTokenIsGood)
             {
                 // read all accs from files
-                List<List<List<string>>> AllAccsBase = new List<List<List<string>>>() { };
-                foreach (Utils.GameAccOffer offer in Offers)
-                {
-                    if (offer._FileToGetAccFromName is not null)
-                    {
-                        var accs = Utils.ReadAllAccs(offer._FileToGetAccFromName);
-                        List<List<string>> acctmp = new List<List<string>>() { };
-                        foreach (var acc in accs)
-                        {
-                            var tempRes = acc.Split($"{offer._DelimiterForGetAccFile}").ToList();
-                            if (!tempRes[tempRes.Count - 1].Contains("#"))
-                            {
-                                tempRes.Add("--------");
-                                tempRes.Add($"#{Utils.GenerateToken()}");
-                            }
-                            acctmp.Add(tempRes);
-                        }
-                        AllAccsBase.Add(acctmp);
-                    }
-                }
-                Logger.AddLogRecord($"Read accs for {AllAccsBase.Count} offer types", Logger.Status.OK);
+                List<List<List<string>>> AllAccsBase = eldorado.ReadAllAccsFromLocalFile(Offers);
 
-                var accsInfo = eldorado.GetAllOffersInfo();
+                var accsInfo = eldorado.GetAllOffersInfoFromEldorado();
                 if (accsInfo is not null)
                 {
                     //getting all accs from eldorado
@@ -71,7 +54,19 @@ try
                         Regex regex = new Regex(@"[#][a-zA-Z\d]{20}");
                         if (acc.description is not null)
                         {
-                            allAccsFromEldorado.Add(new List<string>() { acc.offerState, regex.Match(acc.description.ToString()).ToString() });
+                            List<string> tmp = new List<string> {acc?.offerState, regex.Match(acc.description.ToString()).ToString(), acc.itemId };
+                            if (acc?.tradeEnvironmentValues.Count == 0)
+                            {
+                                tmp.Add(null);
+                            }
+                            else
+                            {
+                                foreach (var value in acc?.tradeEnvironmentValues)
+                                {
+                                    tmp.Add(value.id?.ToString());
+                                }
+                            }
+                            allAccsFromEldorado.Add(tmp);
                             if (acc.offerState == "Closed")
                             {
                                 closedAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString(), acc.offerTitle.ToString() });
@@ -155,26 +150,27 @@ try
                     int gameAccGroupNumber1 = 0;
                     foreach (var gameAccsGroup in AllAccsBase)
                     {
+                        List<List<string>>  currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber1]);
                         int accsOnEldoradoInThisGroup = 0;
-                        foreach (var acc in gameAccsGroup)
+                        foreach (var acc in allAccsFromEldorado)
                         {
-                            if (acc[acc.Count - 2] != "--------" && acc[acc.Count - 2] != "Closed")
+                            if(acc[2] != null && acc[2] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[3] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0])
                             {
                                 accsOnEldoradoInThisGroup++;
                             }
                         }
-                        Logger.AddLogRecord($"Need to add {Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) - accsOnEldoradoInThisGroup} accs", Logger.Status.OK);
+                        Logger.AddLogRecord($"Need to add {Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) - accsOnEldoradoInThisGroup} accs to {Offers[gameAccGroupNumber1]._OfferName}", Logger.Status.OK);
                         int count = 0;
                         while (accsOnEldoradoInThisGroup < Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) && count <= 5)
                         {
-                            var newAcc = gameAccsGroup.FirstOrDefault(acc => acc[acc.Count - 2] == "--------");
+                            var newAcc = currentGameAccsGroup.FirstOrDefault(acc => acc[acc.Count - 2] == "--------");
                             if (newAcc != null)
                             {
                                 if (eldorado.CreateNewOfferFromFile(Offers[gameAccGroupNumber1], newAcc))
                                 {
                                     accsOnEldoradoInThisGroup++;
-                                    int accForChange = gameAccsGroup.FindIndex(acc => acc[acc.Count - 1] == newAcc[newAcc.Count - 1]);
-                                    gameAccsGroup[accForChange][gameAccsGroup[accForChange].Count() - 2] = "OnEldorado";
+                                    int accForChange = currentGameAccsGroup.FindIndex(acc => acc[acc.Count - 1] == newAcc[newAcc.Count - 1]);
+                                    currentGameAccsGroup[accForChange][currentGameAccsGroup[accForChange].Count() - 2] = "OnEldorado";
                                 }
                                 else
                                 {
@@ -193,20 +189,23 @@ try
                             Logger.AddLogRecord($"No accs available, now max for this offer type is {Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado}", Logger.Status.WARN);
                         }
                         Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
+                        Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
+                        Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
+                        Thread.Sleep(10000);
                         gameAccGroupNumber1++;
                     }
 
-                    //write data to a file
-                    int gameAccGroupNumber2 = 0;
-                    foreach (var gameAccsGroup in AllAccsBase)
-                    {
-                        Utils.ReWriteAFile(gameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber2]._FileToGetAccFromName}.txt");
-                        gameAccGroupNumber2++;
-                    }
-                    Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
+                    ////write data to a file
+                    //int gameAccGroupNumber2 = 0;
+                    //foreach (var gameAccsGroup in AllAccsBase)
+                    //{
+                    //    Utils.ReWriteAFile(gameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber2]._FileToGetAccFromName}.txt");
+                    //    gameAccGroupNumber2++;
+                    //}
+                    //Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
 
                     //refreshing 1 of the acc type
-                    accsInfo = eldorado.GetAllOffersInfo();
+                    accsInfo = eldorado.GetAllOffersInfoFromEldorado();
                     if (accsInfo != null)
                     {
                         List<Eldorado.AccOnEldorado> AccsitemIds = new List<Eldorado.AccOnEldorado>();

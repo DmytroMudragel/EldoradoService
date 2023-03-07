@@ -104,6 +104,8 @@ namespace EldoradoBot
         public class GameAccOffer
         {
             public string? _OfferName { get; set; }
+
+            public OfferSignature? _OfferSignature { get; set; }   
             
             public string? _FileToGetAccFromName { get; set; }
             
@@ -115,14 +117,27 @@ namespace EldoradoBot
 
             public string? _MaxAccsToListOnEldorado { get; set; }    
 
-            public GameAccOffer(string? offerName, string? fileToGetAccFromName, string? offerSampleJsonFileName, List<List<string>>? accInfoPositions, string? delimiterForGetAccFile, string? maxAccsToListOnEldorado)
+            public GameAccOffer(string? offerName, OfferSignature? offerSignature, string? fileToGetAccFromName, string? offerSampleJsonFileName, List<List<string>>? accInfoPositions, string? delimiterForGetAccFile, string? maxAccsToListOnEldorado)
             {
                 _OfferName = offerName;
+                _OfferSignature = offerSignature;
                 _FileToGetAccFromName = fileToGetAccFromName;
                 _OfferSampleJsonFileName = offerSampleJsonFileName;
                 _AccInfoPositions = accInfoPositions;
                 _DelimiterForGetAccFile = delimiterForGetAccFile;
                 _MaxAccsToListOnEldorado = maxAccsToListOnEldorado;
+            }
+        }
+
+        public class OfferSignature
+        {
+            public string? _OfferItemId { get; set; }
+            public List<string>? _OfferTradeEnviromentValues { get; set; }
+
+            public OfferSignature(string? offerItemId, List<string>? offerTradeEnviromentValues)
+            {
+                _OfferItemId = offerItemId;
+                _OfferTradeEnviromentValues = offerTradeEnviromentValues;
             }
         }
     }

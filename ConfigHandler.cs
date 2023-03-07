@@ -8,6 +8,8 @@ namespace EldoradoBot
         [JsonInclude]
         public List<string>? OffersNames { get; set; }
         [JsonInclude]
+        public Signature? Signature { get; set; }
+        [JsonInclude]
         public List<string>? FileToGetAccsFromNames { get; set; }
         [JsonInclude]
         public List<string>? OffersSamplesJsonFileNames { get; set; }
@@ -19,6 +21,14 @@ namespace EldoradoBot
         public List<string>?  MaxAccsToListOnEldorado { get; set; }
     }
 
+    public class Signature
+    {
+        [JsonPropertyName("ItemIds")]
+        public List<string>? ItemIds { get; set; }
+
+        [JsonPropertyName("TradeEnviromentValues")]
+        public List<List<string>>? TradeEnviromentValues { get; set; }
+    }
 
     public class ConfigHandler 
     {
