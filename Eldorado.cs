@@ -115,16 +115,19 @@ namespace EldoradoBot
                         if (htmlDoc is not null)
                         {
                             HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
-                            foreach (var chat in chats)
+                            if (chats is not null)
                             {
-                                string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
-                                string buyerName = chat.GetAttributeValue("title", "");
-                                if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
+                                foreach (var chat in chats)
                                 {
-                                    if (messageHistory.ContainsKey(buyerName) == false || messageHistory[buyerName] != messageText)
+                                    string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
+                                    string buyerName = chat.GetAttributeValue("title", "");
+                                    if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
                                     {
-                                        Logger.AddLogRecord($" ⚠️ {buyerName} => {messageText}", Logger.Status.OK, true, false);
-                                        messageHistory[buyerName] = messageText;
+                                        if (messageHistory.ContainsKey(buyerName) == false || messageHistory[buyerName] != messageText)
+                                        {
+                                            Logger.AddLogRecord($" ⚠️ {buyerName} => {messageText}", Logger.Status.OK, true, false);
+                                            messageHistory[buyerName] = messageText;
+                                        }
                                     }
                                 }
                             }
