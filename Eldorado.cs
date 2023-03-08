@@ -129,7 +129,7 @@ namespace EldoradoBot
                                 }
                             }
                         }
-                        Thread.Sleep(7 * 60000);
+                        Thread.Sleep(5000);
                     }
                 }
                 else
