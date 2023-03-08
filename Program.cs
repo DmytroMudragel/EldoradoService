@@ -66,18 +66,26 @@ try
                                     tmp.Add(value.id?.ToString());
                                 }
                             }
+                            tmp.Add(acc?.id);
+                            tmp.Add(acc?.pricePerUnit?.amount?.ToString());
+                            tmp.Add(acc?.pricePerUnit?.currency?.ToString());
+                            tmp.Add(acc?.offerTitle?.ToString());
                             allAccsFromEldorado.Add(tmp);
+
                             if (acc.offerState == "Closed")
                             {
-                                closedAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString(), acc.offerTitle.ToString() });
+                                closedAccs.Add(tmp);
+                                //closedAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString(), acc.offerTitle.ToString() });
                             }
                             if (acc.offerState == "Active")
                             {
-                                activeAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString() });
+                                activeAccs.Add(tmp);
+                                //activeAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString() });
                             }
                             if (acc.offerState == "Paused")
                             {
-                                pausedAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString() });
+                                pausedAccs.Add(tmp);
+                                //pausedAccs.Add(new List<string>() { acc.offerState, regex.Match(acc.description).ToString(), acc.id, acc.pricePerUnit.amount.ToString(), acc.pricePerUnit.currency.ToString() });
                             }
                         }
                     }
@@ -112,7 +120,6 @@ try
 
                     //deleting all closed acc from eldorado and adding this info to acc variable
                     int deletedCount = 0;
-                    foreach (var closedAcc in closedAccs)
                     {
                         if (closedAcc[1] == "")
                         {
