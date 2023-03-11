@@ -3,8 +3,8 @@ using System.Net;
 using System.Text.RegularExpressions;
 
 Console.Title = "Eldorado Shop Bot";
-try
-{
+//try
+//{
     bool refreshTokenIsGood = true;
     ConfigHandler? configInfo = new ConfigHandler()?.Read();
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
@@ -38,8 +38,8 @@ try
             List<Eldorado.AccOnEldorado> refreshedAccs = new List<Eldorado.AccOnEldorado>();
             while (refreshTokenIsGood)
             {
-                try
-                {
+                //try
+                //{
                     // read all accs from files
                     List<List<List<string>>> AllAccsBase = eldorado.ReadAllAccsFromLocalFile(Offers);
 
@@ -131,7 +131,7 @@ try
                                 {
                                     List<List<string>> currentGameAccsGroupForSold = eldorado?.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber]);
                                     var soldAcc = currentGameAccsGroupForSold?.FirstOrDefault(acc => acc[acc.Count - 1] == closedAcc[1]);// if tokens are the same
-                                    if (soldAcc != null && soldAcc[6] != "Closed" && closedAcc[6] == Offers[gameAccGroupNumber]._OfferSignature._OfferItemId && closedAcc[7] == Offers[gameAccGroupNumber]._OfferSignature._OfferTradeEnviromentValues[0])
+                                    if (soldAcc != null && !soldAcc.Contains("Closed") && closedAcc[6] == Offers[gameAccGroupNumber]._OfferSignature._OfferItemId && closedAcc[7] == Offers[gameAccGroupNumber]._OfferSignature._OfferTradeEnviromentValues[0])
                                     {
                                         int accForChange = currentGameAccsGroupForSold.FindIndex(acc => acc[acc.Count - 1] == soldAcc[soldAcc.Count - 1]);
                                         currentGameAccsGroupForSold[accForChange][currentGameAccsGroupForSold[accForChange].Count() - 2] = "Closed";
@@ -257,11 +257,11 @@ try
                     {
                         eldorado.RefreshSession();
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logger.AddLogRecord($"Exeption in main loop {ex}", Logger.Status.EXEPTION, true);
-                }
+                //}
+                //catch (Exception ex)
+                //{
+                //    Logger.AddLogRecord($"Exeption in main loop {ex}", Logger.Status.EXEPTION, true);
+                //}
             }
         }
         else
@@ -273,8 +273,8 @@ try
     {
         Logger.AddLogRecord("Bad config file", Logger.Status.BAD);
     }
-}
-catch (Exception ex)
-{
-    Logger.AddLogRecord($"Exeption in main service {ex}", Logger.Status.EXEPTION, true);
-}
+//}
+//catch (Exception ex)
+//{
+//    Logger.AddLogRecord($"Exeption in main service {ex}", Logger.Status.EXEPTION, true);
+//}
