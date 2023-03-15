@@ -95,7 +95,13 @@ namespace EldoradoBot
             }
         }
 
-        public void MessageChecking(string link, bool refreshTokenIsValid)
+        public void StartMessageAndDisputsChecking(string link, bool refreshTokenIsGood)
+        {
+            Thread eldoradoDataRenewingthread = new Thread(() => { MessageChecking(link, refreshTokenIsGood); });
+            eldoradoDataRenewingthread.Start();
+        }
+
+        private void MessageChecking(string link, bool refreshTokenIsValid)
         {
             try
             {
@@ -109,21 +115,24 @@ namespace EldoradoBot
                         if (htmlDoc is not null)
                         {
                             HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
-                            foreach (var chat in chats)
+                            if (chats is not null)
                             {
-                                string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
-                                string buyerName = chat.GetAttributeValue("title", "");
-                                if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
+                                foreach (var chat in chats)
                                 {
-                                    if (messageHistory.ContainsKey(buyerName) == false || messageHistory[buyerName] != messageText)
+                                    string messageText = chat.SelectSingleNode(".//div[contains(@class,'ConversationListItem__message')]").SelectSingleNode(".//span[contains(@class,'Emojilinkistrippify')]").InnerText;
+                                    string buyerName = chat.GetAttributeValue("title", "");
+                                    if (!messageText.Contains("left the chat.") && !messageText.Contains("If you received goods or services"))
                                     {
-                                        Logger.AddLogRecord($" ⚠️New message from {buyerName}\n{messageText}", Logger.Status.OK, true, false);
-                                        messageHistory[buyerName] = messageText;
+                                        if (messageHistory.ContainsKey(buyerName) == false || messageHistory[buyerName] != messageText)
+                                        {
+                                            Logger.AddLogRecord($" ⚠️ {buyerName} => {messageText}", Logger.Status.OK, true, false);
+                                            messageHistory[buyerName] = messageText;
+                                        }
                                     }
                                 }
                             }
                         }
-                        Thread.Sleep(7 * 60000);
+                        Thread.Sleep(5000);
                     }
                 }
                 else
@@ -137,7 +146,67 @@ namespace EldoradoBot
             }
         }
 
+        public List<List<string>>? ReadSpecificAccsFromLocalFile(Utils.GameAccOffer offer)
+        {
+            try
+            {
+                List<List<string>> AccsBase = new List<List<string>>() { };
+                if (offer._FileToGetAccFromName is not null)
+                {
+                    var accs = Utils.ReadAllAccs(offer._FileToGetAccFromName);
+                    foreach (var acc in accs)
+                    {
+                        var tempRes = acc.Split($"{offer._DelimiterForGetAccFile}").ToList();
+                        if (!tempRes[tempRes.Count - 1].Contains("#"))
+                        {
+                            tempRes.Add("--------");
+                            tempRes.Add($"#{Utils.GenerateToken()}");
+                        }
+                        AccsBase.Add(tempRes);
+                    }
+                }
+                return AccsBase;
+            }
+            catch (Exception ex)
+            {
+                Logger.AddLogRecord($"Exeption while read single file for accs: {ex}", Logger.Status.EXEPTION);
+                return null;
+            }
+        }
 
+        public List<List<List<string>>>? ReadAllAccsFromLocalFile(List<Utils.GameAccOffer> Offers)
+        {
+            try
+            {
+                List<List<List<string>>> AllAccsBase = new List<List<List<string>>>() { };
+                foreach (Utils.GameAccOffer offer in Offers)
+                {
+                    if (offer._FileToGetAccFromName is not null)
+                    {
+                        var accs = Utils.ReadAllAccs(offer._FileToGetAccFromName);
+                        List<List<string>> acctmp = new List<List<string>>() { };
+                        foreach (var acc in accs)
+                        {
+                            var tempRes = acc.Split($"{offer._DelimiterForGetAccFile}").ToList();
+                            if (!tempRes[tempRes.Count - 1].Contains("#"))
+                            {
+                                tempRes.Add("--------");
+                                tempRes.Add($"#{Utils.GenerateToken()}");
+                            }
+                            acctmp.Add(tempRes);
+                        }
+                        AllAccsBase.Add(acctmp);
+                    }
+                }
+                Logger.AddLogRecord($"Read accs for {AllAccsBase.Count} offer types", Logger.Status.OK);
+                return AllAccsBase;
+            }
+            catch (Exception ex)
+            {
+                Logger.AddLogRecord($"Exeption while read all accs files: {ex}", Logger.Status.EXEPTION);
+                return null;
+            }
+        }
 
         public bool RefreshSession()
         {
@@ -202,7 +271,6 @@ namespace EldoradoBot
             }
         }
 
-
         public int GetActivities()
         {
             try
@@ -257,9 +325,12 @@ namespace EldoradoBot
                             Logger.AddLogRecord($"New offer {offerInfo._OfferName} => {acc[acc.Count - 1]} created", Logger.Status.OK);
                             return true;
                         }
+                        else
+                        {
+                            Logger.AddLogRecord($"Failed creating new order {httpResponse.StatusCode}|{httpResponse.RequestMessage}|{httpResponse.ReasonPhrase}", Logger.Status.BAD);
+                        }
                     }
                 }
-                Logger.AddLogRecord("Failed creating new order", Logger.Status.BAD);
                 return false;
             }
             catch (Exception ex)
@@ -325,7 +396,7 @@ namespace EldoradoBot
             return null;
         }
 
-        public List<AllAccsInfo.Result>? GetAllOffersInfo()
+        public List<AllAccsInfo.Result>? GetAllOffersInfoFromEldorado()
         {
             try
             {
