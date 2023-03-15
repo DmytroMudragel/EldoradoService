@@ -136,6 +136,10 @@ try
                                 {
                                     List<List<string>> currentGameAccsGroupForSold = eldorado?.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber]);
                                     var soldAcc = currentGameAccsGroupForSold?.FirstOrDefault(acc => acc[acc.Count - 1] == closedAcc[1]);// if tokens are the same
+                                    if (closedAcc[7] == null)
+                                    {
+                                        closedAcc[7] = "null";
+                                    }
                                     if (soldAcc != null && !soldAcc.Contains("Closed") && closedAcc[6] == Offers[gameAccGroupNumber]._OfferSignature._OfferItemId && closedAcc[7] == Offers[gameAccGroupNumber]._OfferSignature._OfferTradeEnviromentValues[0])
                                     {
                                         int accForChange = currentGameAccsGroupForSold.FindIndex(acc => acc[acc.Count - 1] == soldAcc[soldAcc.Count - 1]);
@@ -204,7 +208,7 @@ try
                             Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
                             Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                             Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
-                            Thread.Sleep(30000);
+                            //Thread.Sleep(30000);
                             gameAccGroupNumber1++;
                         }
 
