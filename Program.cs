@@ -3,8 +3,8 @@ using System.Net;
 using System.Text.RegularExpressions;
 
 Console.Title = "Eldorado Shop Bot";
-//try
-//{
+try
+{
     bool refreshTokenIsGood = true;
     ConfigHandler? configInfo = new ConfigHandler()?.Read();
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
@@ -38,8 +38,8 @@ Console.Title = "Eldorado Shop Bot";
             List<Eldorado.AccOnEldorado> refreshedAccs = new List<Eldorado.AccOnEldorado>();
             while (refreshTokenIsGood)
             {
-                //try
-                //{
+                try
+                {
                     // read all accs from files
                     List<List<List<string>>> AllAccsBase = eldorado.ReadAllAccsFromLocalFile(Offers);
 
@@ -71,7 +71,7 @@ Console.Title = "Eldorado Shop Bot";
                                 allAccsFromEldorado.Add(tmp);
                                 if (acc.offerState == "Closed")
                                 {
-                                    closedAccs.Add(tmp);                                   
+                                    closedAccs.Add(tmp);
                                 }
                                 if (acc.offerState == "Active")
                                 {
@@ -86,21 +86,23 @@ Console.Title = "Eldorado Shop Bot";
                         Logger.AddLogRecord($"Eldorado => Total: {allAccsFromEldorado.Count} Active: {activeAccs.Count} Paused: {pausedAccs.Count} Closed: {closedAccs.Count} ", Logger.Status.OK);
 
                         //Check for disputes
-                        int res = eldorado.GetActivities();
-                        if (res == 0)
-                        {
-                            lastDisputsCount = 0;
-                        }
-                        if (res > 0 && res > lastDisputsCount)
-                        {
-                            Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
-                            lastDisputsCount = lastDisputsCount + res;
-                        }
+                        //int res = eldorado.GetActivities();
+                        //if (res == 0)
+                        //{
+                        //    lastDisputsCount = 0;
+                        //}
+                        //if (res > 0 && res > lastDisputsCount)
+                        //{
+                        //    Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
+                        //    lastDisputsCount = lastDisputsCount + res;
+                        //}
 
                         //Changing the data in txt file
+                        int gameAccGroupNum= 0;
                         foreach (var accGroup in AllAccsBase)
                         {
-                            foreach (var acc in accGroup)
+                            List<List<string>> currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNum]);
+                            foreach (var acc in currentGameAccsGroup)
                             {
                                 if (allAccsFromEldorado.FirstOrDefault(a => a[1] == acc[acc.Count - 1]) == null)
                                 {
@@ -110,6 +112,9 @@ Console.Title = "Eldorado Shop Bot";
                                     }
                                 }
                             }
+                            Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNum]._FileToGetAccFromName}.txt");
+                            Logger.AddLogRecord($"Data was saved for the file {Offers[gameAccGroupNum]._FileToGetAccFromName}.txt", Logger.Status.OK);
+                            gameAccGroupNum++;
                         }
 
                         //deleting all closed acc from eldorado and adding this info to acc variable
@@ -158,6 +163,10 @@ Console.Title = "Eldorado Shop Bot";
                             int accsOnEldoradoInThisGroup = 0;
                             foreach (var acc in allAccsFromEldorado)
                             {
+                                if (acc[7] == null)
+                                {
+                                    acc[7] = "null";
+                                }
                                 if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0])
                                 {
                                     accsOnEldoradoInThisGroup++;
@@ -195,7 +204,7 @@ Console.Title = "Eldorado Shop Bot";
                             Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
                             Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                             Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
-                            Thread.Sleep(10000);
+                            Thread.Sleep(30000);
                             gameAccGroupNumber1++;
                         }
 
@@ -257,11 +266,11 @@ Console.Title = "Eldorado Shop Bot";
                     {
                         eldorado.RefreshSession();
                     }
-                //}
-                //catch (Exception ex)
-                //{
-                //    Logger.AddLogRecord($"Exeption in main loop {ex}", Logger.Status.EXEPTION, true);
-                //}
+                }
+                catch (Exception ex)
+                {
+                    Logger.AddLogRecord($"Exeption in main loop {ex}", Logger.Status.EXEPTION, true);
+                }
             }
         }
         else
@@ -273,8 +282,8 @@ Console.Title = "Eldorado Shop Bot";
     {
         Logger.AddLogRecord("Bad config file", Logger.Status.BAD);
     }
-//}
-//catch (Exception ex)
-//{
-//    Logger.AddLogRecord($"Exeption in main service {ex}", Logger.Status.EXEPTION, true);
-//}
+}
+catch (Exception ex)
+{
+    Logger.AddLogRecord($"Exeption in main service {ex}", Logger.Status.EXEPTION, true);
+}
