@@ -180,6 +180,7 @@ try
                             int count = 0;
                             while (accsOnEldoradoInThisGroup < Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) && count <= 5)
                             {
+                                currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber1]);
                                 var newAcc = currentGameAccsGroup.FirstOrDefault(acc => acc[acc.Count - 2] == "--------");
                                 if (newAcc != null)
                                 {
@@ -188,6 +189,7 @@ try
                                         accsOnEldoradoInThisGroup++;
                                         int accForChange = currentGameAccsGroup.FindIndex(acc => acc[acc.Count - 1] == newAcc[newAcc.Count - 1]);
                                         currentGameAccsGroup[accForChange][currentGameAccsGroup[accForChange].Count() - 2] = "OnEldorado";
+                                        Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                                     }
                                     else
                                     {
@@ -208,7 +210,7 @@ try
                             Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
                             Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                             Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
-                            //Thread.Sleep(30000);
+                            Thread.Sleep(30000);
                             gameAccGroupNumber1++;
                         }
 
