@@ -132,6 +132,10 @@ namespace EldoradoBot
                                 }
                             }
                         }
+                        if (messageHistory.Count > 20)
+                        {
+                            messageHistory.Clear();
+                        }
                         Thread.Sleep(5000);
                     }
                 }
