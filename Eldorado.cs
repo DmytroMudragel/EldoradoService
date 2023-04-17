@@ -114,14 +114,11 @@ namespace EldoradoBot
                         HtmlAgilityPack.HtmlDocument? htmlDoc = GetHtml(link);
                         if (htmlDoc is not null)
                         {
-                            HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__active ConversationListItem__unread']");
-                            HtmlNodeCollection allChats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
-                            if (chats is not null && allChats is not null)
+                            HtmlNodeCollection? chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']"); ;
+                            var activeChat = htmlDoc.DocumentNode.SelectSingleNode(".//a[@class='ConversationListItem__conversation-link ConversationListItem__active ConversationListItem__unread']");
+                            if (activeChat is not null && chats is not null)
                             {
-                                foreach (HtmlNode cht in allChats)
-                                {
-                                    chats.Add(cht);
-                                }
+                                chats?.Add(activeChat);
                             }
                             if (chats is not null)
                             {
