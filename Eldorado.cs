@@ -116,7 +116,7 @@ namespace EldoradoBot
                         {
                             HtmlNodeCollection chats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__active ConversationListItem__unread']");
                             HtmlNodeCollection allChats = htmlDoc.DocumentNode.SelectNodes(".//a[@class='ConversationListItem__conversation-link ConversationListItem__unread']");
-                            if (allChats is not null)
+                            if (chats is not null && allChats is not null)
                             {
                                 foreach (HtmlNode cht in allChats)
                                 {

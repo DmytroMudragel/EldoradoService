@@ -98,7 +98,7 @@ try
                         //}
 
                         //Changing the data in txt file
-                        int gameAccGroupNum= 0;
+                        int gameAccGroupNum = 0;
                         foreach (var accGroup in AllAccsBase)
                         {
                             List<List<string>> currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNum]);
@@ -161,11 +161,14 @@ try
 
                         // list new offers til reach max num of accs if there is not enought
                         int gameAccGroupNumber1 = 0;
+                        List<List<string>> tmplist = allAccsFromEldorado;
+                        List<List<string>> tmplistforDeleting = new List<List<string>>();
                         foreach (var gameAccsGroup in AllAccsBase)
                         {
                             List<List<string>> currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber1]);
                             int accsOnEldoradoInThisGroup = 0;
-                            foreach (var acc in allAccsFromEldorado)
+                            List<string> etalonAcc = new List<string>();
+                            foreach (var acc in tmplist)
                             {
                                 if (acc[7] == null)
                                 {
@@ -173,8 +176,24 @@ try
                                 }
                                 if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0])
                                 {
+                                    etalonAcc = acc;
+                                }
+                            }
+                            foreach (var acc in tmplist)
+                            {
+                                if (acc[7] == null)
+                                {
+                                    acc[7] = "null";
+                                }
+                                if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0] && acc[5] == etalonAcc[5])
+                                {
+                                    tmplistforDeleting.Add(acc);
                                     accsOnEldoradoInThisGroup++;
                                 }
+                            }
+                            foreach (var item in tmplistforDeleting)
+                            {
+                                tmplist.Remove(item);
                             }
                             Logger.AddLogRecord($"Need to add {Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) - accsOnEldoradoInThisGroup} accs to {Offers[gameAccGroupNumber1]._OfferName}", Logger.Status.OK);
                             int count = 0;
