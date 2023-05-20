@@ -154,33 +154,39 @@ try
                             List<List<string>> currentGameAccsGroup = eldorado.ReadSpecificAccsFromLocalFile(Offers[gameAccGroupNumber1]);
                             int accsOnEldoradoInThisGroup = 0;
                             List<string> etalonAcc = new List<string>();
+                            // Searching for the etalon desired acc
                             foreach (var acc in tmplist)
                             {
                                 if (acc[7] == null)
                                 {
                                     acc[7] = "null";
                                 }
-                                if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0])
+                                if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0] && acc[5].Contains(Offers[gameAccGroupNumber1]._OfferName))
                                 {
                                     etalonAcc = acc;
                                 }
                             }
-                            foreach (var acc in tmplist)
+                            // Counting such an accs
+                            if (etalonAcc.Count != 0)
                             {
-                                if (acc[7] == null)
+                                foreach (var acc in tmplist)
                                 {
-                                    acc[7] = "null";
+                                    if (acc[7] == null)
+                                    {
+                                        acc[7] = "null";
+                                    }
+                                    if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0] && acc[5] == etalonAcc[5])
+                                    {
+                                        tmplistforDeleting.Add(acc);
+                                        accsOnEldoradoInThisGroup++;
+                                    }
                                 }
-                                if (acc[6] != null && acc[6] == Offers[gameAccGroupNumber1]._OfferSignature._OfferItemId && acc[7] == Offers[gameAccGroupNumber1]._OfferSignature._OfferTradeEnviromentValues[0] && acc[5] == etalonAcc[5])
+                                foreach (var item in tmplistforDeleting)
                                 {
-                                    tmplistforDeleting.Add(acc);
-                                    accsOnEldoradoInThisGroup++;
+                                    tmplist.Remove(item);
                                 }
                             }
-                            foreach (var item in tmplistforDeleting)
-                            {
-                                tmplist.Remove(item);
-                            }
+
                             Logger.AddLogRecord($"Need to add {Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) - accsOnEldoradoInThisGroup} accs to {Offers[gameAccGroupNumber1]._OfferName}", Logger.Status.OK);
                             int count = 0;
                             while (accsOnEldoradoInThisGroup < Convert.ToInt32(Offers[gameAccGroupNumber1]._MaxAccsToListOnEldorado) && count <= 5)
@@ -215,7 +221,7 @@ try
                             Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
                             Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                             Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
-                            //Thread.Sleep(30000);
+                            Thread.Sleep(30000);
                             gameAccGroupNumber1++;
                         }
 
@@ -275,18 +281,21 @@ try
                     }
                     else
                     {
-                        eldorado.RefreshSession();
+                        if (!eldorado.RefreshSession())
+                        {
+                            refreshTokenIsGood = false;
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.AddLogRecord($"Exeption in main loop {ex}", Logger.Status.EXEPTION, true);
+                    Logger.AddLogRecord($"Exeption in the main loop {ex}", Logger.Status.EXEPTION, true);
                 }
             }
         }
         else
         {
-            Logger.AddLogRecord("Failed to init, wrong refresh token, please get new refreshToken", Logger.Status.BAD, true);
+            Logger.AddLogRecord("Failed to init, wrong refresh token, please get new refreshToken", Logger.Status.BAD,true, true);
         }
     }
     else
