@@ -19,8 +19,6 @@ namespace EldoradoBot
         public List<string>? DelimitersForGetAccsFiles { get; set; }
         [JsonInclude]
         public List<string>?  MaxAccsToListOnEldorado { get; set; }
-        //[JsonInclude]
-        //public List<string>? Number { get; set; }
     }
 
     public class Signature
@@ -66,8 +64,7 @@ namespace EldoradoBot
                                 configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.OffersSamplesJsonFileNames?.Count &&
                                 configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.AccInfoPositions?.Count &&
                                 configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.DelimitersForGetAccsFiles?.Count &&
-                                configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.MaxAccsToListOnEldorado?.Count /*&&*/
-                                /*configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.Number?.Count*/)
+                                configFile?.OffersInfo?.OffersNames?.Count == configFile?.OffersInfo?.MaxAccsToListOnEldorado?.Count)
                             {
                                 return configFile;
                             }

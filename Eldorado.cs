@@ -469,6 +469,49 @@ namespace EldoradoBot
             }
         }
 
+        //public List<List<string>> GetAllAccsFromEldorado(List<AllAccsInfo.Result> accsInfo)
+        //{
+        //    //Getting all accs from eldorado
+        //    List<List<string>> allAccsFromEldorado = new List<List<string>>() { };
+        //    List<List<string>> closedAccs = new List<List<string>>() { };
+        //    List<List<string>> activeAccs = new List<List<string>>() { };
+        //    List<List<string>> pausedAccs = new List<List<string>>() { };
+        //    foreach (var acc in accsInfo)
+        //    {
+        //        Regex regex = new Regex(@"[#][a-zA-Z\d]{20}");
+        //        if (acc.description is not null)
+        //        {
+        //            List<string> tmp = new List<string> { acc?.offerState, regex.Match(acc.description.ToString()).ToString(), acc?.id, acc?.pricePerUnit?.amount?.ToString(), acc?.pricePerUnit?.currency?.ToString(), acc?.offerTitle?.ToString(), acc.itemId };
+        //            if (acc?.tradeEnvironmentValues.Count == 0)
+        //            {
+        //                tmp.Add(null);
+        //            }
+        //            else
+        //            {
+        //                foreach (var value in acc?.tradeEnvironmentValues)
+        //                {
+        //                    tmp.Add(value.id?.ToString());
+        //                }
+        //            }
+        //            allAccsFromEldorado.Add(tmp);
+        //            if (acc.offerState == "Closed")
+        //            {
+        //                closedAccs.Add(tmp);
+        //            }
+        //            if (acc.offerState == "Active")
+        //            {
+        //                activeAccs.Add(tmp);
+        //            }
+        //            if (acc.offerState == "Paused")
+        //            {
+        //                pausedAccs.Add(tmp);
+        //            }
+        //        }
+        //    }
+        //    Logger.AddLogRecord($"Eldorado => Total: {allAccsFromEldorado.Count} Active: {activeAccs.Count} Paused: {pausedAccs.Count} Closed: {closedAccs.Count} ", Logger.Status.OK);
+        //    return allAccsFromEldorado;
+        //}
+
         //#region Base functions for any window
 
         ///// <summary>

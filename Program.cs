@@ -1,5 +1,4 @@
 ﻿using EldoradoBot;
-using System.Net;
 using System.Text.RegularExpressions;
 
 Console.Title = "Eldorado Shop Bot";
@@ -9,11 +8,14 @@ try
     ConfigHandler? configInfo = new ConfigHandler()?.Read();
     if (configInfo?.OffersInfo?.OffersNames is not null && configInfo?.TelegramBotToken is not null && configInfo?.UsedId is not null)
     {
+        //Starting telegram bot
         ITelegramBot telegramBot = new JustNotifyTelegramBot();
         if (telegramBot.Init(configInfo.TelegramBotToken, configInfo.UsedId))
         {
             Logger.Init(telegramBot);
         }
+
+        //Setting accounts preferenses from config
         List<Utils.GameAccOffer> Offers = new List<Utils.GameAccOffer>() { };
         for (int i = 0; i < configInfo?.OffersInfo?.OffersNames.Count(); i++)
         {
@@ -21,6 +23,8 @@ try
                 configInfo?.OffersInfo?.FileToGetAccsFromNames[i], configInfo?.OffersInfo?.OffersSamplesJsonFileNames[i],
                 configInfo?.OffersInfo?.AccInfoPositions[i], configInfo?.OffersInfo?.DelimitersForGetAccsFiles[i], configInfo?.OffersInfo?.MaxAccsToListOnEldorado[i]));
         }
+
+        
         Eldorado eldorado = new Eldorado();
 
         if (configInfo?.ChatLink is not null && eldorado.Init(configInfo))
@@ -29,18 +33,12 @@ try
             eldorado.StartMessageAndDisputsChecking(configInfo.ChatLink, refreshTokenIsGood);
 
 
-
-
-
-
-
-            int lastDisputsCount = 0;
             List<Eldorado.AccOnEldorado> refreshedAccs = new List<Eldorado.AccOnEldorado>();
             while (refreshTokenIsGood)
             {
                 try
                 {
-                    // read all accs from files
+                    //Reading all accs from files
                     List<List<List<string>>> AllAccsBase = eldorado.ReadAllAccsFromLocalFile(Offers);
 
                     var accsInfo = eldorado.GetAllOffersInfoFromEldorado();
@@ -84,18 +82,6 @@ try
                             }
                         }
                         Logger.AddLogRecord($"Eldorado => Total: {allAccsFromEldorado.Count} Active: {activeAccs.Count} Paused: {pausedAccs.Count} Closed: {closedAccs.Count} ", Logger.Status.OK);
-
-                        //Check for disputes
-                        //int res = eldorado.GetActivities();
-                        //if (res == 0)
-                        //{
-                        //    lastDisputsCount = 0;
-                        //}
-                        //if (res > 0 && res > lastDisputsCount)
-                        //{
-                        //    Logger.AddLogRecord($"{res} new Disputed order", Logger.Status.OK, true);
-                        //    lastDisputsCount = lastDisputsCount + res;
-                        //}
 
                         //Changing the data in txt file
                         int gameAccGroupNum = 0;
@@ -229,7 +215,7 @@ try
                             Logger.AddLogRecord($"{accsOnEldoradoInThisGroup} acc now on {Offers[gameAccGroupNumber1]._OfferName} listing", Logger.Status.OK);
                             Utils.ReWriteAFile(currentGameAccsGroup, $"{Environment.CurrentDirectory}\\Accounts\\{Offers[gameAccGroupNumber1]._FileToGetAccFromName}.txt");
                             Logger.AddLogRecord($"Data was saved to the file", Logger.Status.OK);
-                            Thread.Sleep(30000);
+                            //Thread.Sleep(30000);
                             gameAccGroupNumber1++;
                         }
 

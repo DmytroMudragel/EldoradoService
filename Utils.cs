@@ -117,8 +117,6 @@ namespace EldoradoBot
 
             public string? _MaxAccsToListOnEldorado { get; set; }
 
-            //public string? _Number { get; set; }
-
             public GameAccOffer(string? offerName, OfferSignature? offerSignature, string? fileToGetAccFromName, string? offerSampleJsonFileName, List<List<string>>? accInfoPositions, string? delimiterForGetAccFile, string? maxAccsToListOnEldorado/*, string? number*/)
             {
                 _OfferName = offerName;
@@ -128,7 +126,6 @@ namespace EldoradoBot
                 _AccInfoPositions = accInfoPositions;
                 _DelimiterForGetAccFile = delimiterForGetAccFile;
                 _MaxAccsToListOnEldorado = maxAccsToListOnEldorado;
-                //_Number = number;
             }
         }
 
